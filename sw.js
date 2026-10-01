@@ -1,4 +1,4 @@
-const CACHE = 'girl-money-v38';
+const CACHE = 'girl-money-v39';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './favicon.ico'];
 
 self.addEventListener('install', e => {
