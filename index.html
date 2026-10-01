@@ -99,6 +99,9 @@
     .an-nav-arrow { background:var(--rose-l); color:var(--rose-d); border:none; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; flex-shrink:0; }
     #an-period-sel { flex:1; background:var(--sand); border:none; border-radius:10px; padding:9px 12px; font-size:13px; color:var(--text); font-family:'DM Sans',sans-serif; min-width:0; }
     .an-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+    .an-grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; }
+    .an-grid3 .sc-label { font-size:10px; }
+    .an-grid3 .sc-val { font-size:15px; }
     .an-balance-card { background:var(--white); border-radius:var(--radius); box-shadow:0 4px 16px var(--shadow); padding:14px 16px; margin-bottom:12px; }
     .an-balance-card .sc-label { font-size:11px; }
     .an-balance-card .sc-val { font-size:24px; }
@@ -370,6 +373,12 @@
     .sc-btn.add { background:var(--green-l); color:#3A7A50; }
     .sc-btn.mov { background:var(--mauve-l); color:#6A4A8A; }
     .sc-btn.del { background:var(--red-l); color:var(--red); }
+    .sc-btn.asig { background:var(--gold-l,#F5E6C8); color:#8A6A2A; }
+    .sc-asig-list { margin-top:12px; padding-top:10px; border-top:1px solid var(--sand); }
+    .sc-asig-hdr { font-size:11px; color:var(--text-s); margin-bottom:6px; }
+    .sc-asig-row { display:flex; align-items:center; gap:8px; padding:6px 0; font-size:12px; }
+    .sc-asig-desc { flex:1; color:var(--text); }
+    .sc-asig-amt { font-weight:600; color:var(--text); }
     .empty-ahorro { text-align:center; padding:44px 20px; color:var(--text-s); font-size:14px; line-height:1.8; }
     .empty-ahorro .ea-icon { font-size:42px; margin-bottom:10px; }
 
@@ -589,10 +598,9 @@
 
   <div class="sec-hdr">
     <h2>Ahorros</h2>
-    <button class="btn-new-cat" onclick="openMmAhorroAdd()">＋</button>
   </div>
   <div id="mm-ahorro-list" class="cats">
-    <div class="empty-state"><div class="ei">🐷</div>Todavía no hay ahorros este mes</div>
+    <div class="empty-state"><div class="ei">🐷</div>Todavía no has asignado ahorro este mes<br>Asígnalo desde tus huchas en la pestaña Ahorro</div>
   </div>
 
   <div class="sec-hdr">
@@ -656,15 +664,13 @@
     </div>
 
     <div class="chart-card" id="an-ahorro-card">
-      <div class="mm-ahorro-hdr">
-        <h3 style="margin:0">🐷 Ahorros del periodo</h3>
-        <div class="mm-ahorro-amt" id="an-ahorro-amt" style="margin-top:0;font-size:20px">€ 0,00</div>
+      <h3>🐷 Ahorro (huchas)</h3>
+      <div class="an-grid3">
+        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label">Ahorro este mes</div><div class="sc-val" id="an-ahorro-amt" style="color:#8A6A2A">€0,00</div></div>
+        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label" id="an-avg-ahorro-label">Promedio/mes</div><div class="sc-val" id="an-avg-ahorro" style="color:#8A6A2A">€0,00</div></div>
+        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label" id="an-total-ahorro-label">Total año</div><div class="sc-val" id="an-total-ahorro" style="color:#8A6A2A">€0,00</div></div>
       </div>
-      <div id="an-ahorro-list" style="margin-top:10px"></div>
-      <div class="an-grid2" style="margin-top:12px">
-        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label" id="an-avg-ahorro-label">Promedio ahorro (año)</div><div class="sc-val" id="an-avg-ahorro" style="color:#8A6A2A">€0,00</div></div>
-        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label" id="an-total-ahorro-label">Total ahorro (año)</div><div class="sc-val" id="an-total-ahorro" style="color:#8A6A2A">€0,00</div></div>
-      </div>
+      <div id="an-ahorro-list"></div>
     </div>
 
     <div class="chart-card" id="pie-card">
@@ -1029,17 +1035,17 @@
   </div>
 </div>
 
-<!-- MODAL: añadir ahorro (Money Manager) -->
-<div class="modal-bg" id="m-mm-ahorro">
+<!-- MODAL: asignar ahorro a una hucha (sin transferencia) -->
+<div class="modal-bg" id="m-sub-asig">
   <div class="modal">
-    <h3>🐷 Nuevo ahorro</h3>
-    <label>Nombre</label>
-    <input type="text" id="m-mm-ahorro-name" placeholder="p.ej. Vacaciones"/>
+    <h3 id="m-sub-asig-title">📌 Asignar ahorro</h3>
     <label>Cantidad (€)</label>
-    <input type="number" id="m-mm-ahorro-val" step="0.01" placeholder="0.00"/>
+    <input type="number" id="m-sub-asig-amt" step="0.01" placeholder="0.00"/>
+    <label>Descripción (opcional)</label>
+    <input type="text" id="m-sub-asig-desc" placeholder="p.ej. Ahorro de este mes"/>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal('m-mm-ahorro')">Cancelar</button>
-      <button class="btn-ok" onclick="saveMmAhorro()">Guardar</button>
+      <button class="btn-cancel" onclick="closeModal('m-sub-asig')">Cancelar</button>
+      <button class="btn-ok" onclick="saveSubAsig()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1108,6 +1114,7 @@ function normalize(val) {
   Object.keys(s.subcuentas).forEach(id=>{
     if(typeof s.subcuentas[id].balance!=='number') s.subcuentas[id].balance=0;
     if(!s.subcuentas[id].movimientos||Array.isArray(s.subcuentas[id].movimientos)) s.subcuentas[id].movimientos={};
+    if(!s.subcuentas[id].asignaciones||Array.isArray(s.subcuentas[id].asignaciones)) s.subcuentas[id].asignaciones={};
   });
   Object.keys(s.categories).forEach((id,i)=>{
     if(!s.categories[id].transactions||Array.isArray(s.categories[id].transactions))
@@ -1871,16 +1878,16 @@ function renderMoneyManager(){
     iEl.innerHTML=cardsHtml?cardsHtml:'<div class="empty-state"><div class="ei">📥</div>Marca una categoría como "de ingresos"<br>desde Cuentas para que aparezca aquí</div>';
   }
 
-  const ahorros=Object.values(state.mmAhorros||{}).sort((a,b)=>b.ts-a.ts);
+  const asignaciones=huchaAsignacionesForPeriod('current').sort((a,b)=>b.ts-a.ts);
   const aEl=document.getElementById('mm-ahorro-list');
   if(aEl){
-    aEl.innerHTML=ahorros.length?ahorros.map(a=>`
+    aEl.innerHTML=asignaciones.length?asignaciones.map(a=>`
       <div class="cat-card"><div class="cat-hdr" style="cursor:default">
-        <div class="ch-info"><div class="ch-name">${esc(a.name)}</div></div>
+        <div class="ch-emoji">${esc(a.emoji||'🐷')}</div>
+        <div class="ch-info"><div class="ch-name">${esc(a.subName)}${a.desc?' <span class="mm-cat-src">· '+esc(a.desc)+'</span>':''}</div></div>
         <div class="mm-amt">€${fmt(a.amount)}</div>
-        <button class="tr-del" onclick="delMmAhorro('${a.id}')">🗑</button>
       </div></div>`).join('')
-      :'<div class="empty-state"><div class="ei">🐷</div>Todavía no hay ahorros este mes</div>';
+      :'<div class="empty-state"><div class="ei">🐷</div>Todavía no has asignado ahorro este mes<br>Asígnalo desde tus huchas en la pestaña Ahorro</div>';
   }
   renderMmPrevision();
 }
@@ -1899,25 +1906,45 @@ window.mmChooseAcc=function(acc){
   else openTxJoint(mmPendingCatId,mmPendingType);
 };
 
-window.openMmAhorroAdd=function(){
-  document.getElementById('m-mm-ahorro-name').value='';
-  document.getElementById('m-mm-ahorro-val').value='';
-  openModal('m-mm-ahorro');
+// ── Asignaciones de ahorro por hucha (sin transferencia) ────────
+let asigSubId=null, asigEditId=null;
+window.openSubAsig=function(subId,editId){
+  const sc=state.subcuentas?.[subId]; if(!sc) return;
+  asigSubId=subId; asigEditId=editId||null;
+  const editing=editId?sc.asignaciones?.[editId]:null;
+  document.getElementById('m-sub-asig-title').textContent=(editing?'✏️ Editar asignación — ':'📌 Asignar ahorro — ')+(sc.emoji||'🐷')+' '+sc.name;
+  document.getElementById('m-sub-asig-amt').value=editing?editing.amount:'';
+  document.getElementById('m-sub-asig-desc').value=editing?.desc||'';
+  openModal('m-sub-asig');
 };
-window.saveMmAhorro=function(){
-  const name=document.getElementById('m-mm-ahorro-name').value.trim()||'Ahorro';
-  const v=parseFloat(document.getElementById('m-mm-ahorro-val').value);
-  if(isNaN(v)||v<0){ window.toast('Cantidad inválida'); return; }
-  const id=uid();
-  if(!state.mmAhorros) state.mmAhorros={};
-  state.mmAhorros[id]={id,name,amount:v,ts:Date.now()};
-  saveState(); closeModal('m-mm-ahorro');
-  window.toast('Ahorro añadido ✓');
+window.saveSubAsig=function(){
+  const sc=state.subcuentas?.[asigSubId]; if(!sc) return;
+  const amount=parseFloat(document.getElementById('m-sub-asig-amt').value);
+  const desc=document.getElementById('m-sub-asig-desc').value.trim();
+  if(isNaN(amount)||amount<=0){ window.toast('Cantidad inválida'); return; }
+  if(!sc.asignaciones) sc.asignaciones={};
+  const id=asigEditId||uid();
+  const ts=asigEditId?(sc.asignaciones[asigEditId]?.ts||Date.now()):Date.now();
+  sc.asignaciones[id]={id,amount,desc,ts};
+  saveState(); closeModal('m-sub-asig');
+  window.toast(asigEditId?'Asignación actualizada ✓':`📌 €${amount.toFixed(2)} asignados ✓`);
 };
-window.delMmAhorro=function(id){
-  if(!state.mmAhorros?.[id]) return;
-  delete state.mmAhorros[id]; saveState(); window.toast('Ahorro eliminado');
+window.delSubAsig=function(subId,id){
+  const sc=state.subcuentas?.[subId]; if(!sc?.asignaciones?.[id]) return;
+  delete sc.asignaciones[id]; saveState(); window.toast('Asignación eliminada');
 };
+// Todas las asignaciones de todas las huchas para un periodo dado ('current' o clave de historial)
+function huchaAsignacionesForPeriod(period){
+  if(period==='current'){
+    const out=[];
+    Object.values(state.subcuentas||{}).forEach(sc=>{
+      txThisMonth(sc.asignaciones).forEach(a=>out.push({...a,subId:sc.id,subName:sc.name,emoji:sc.emoji}));
+    });
+    return out;
+  }
+  const m=state.historial?.[period];
+  return m?.ahorroItems||[];
+}
 
 // ── Previsión de gastos (Money Manager) ─────────────────────────
 function renderMmPrevision(){
@@ -2175,11 +2202,12 @@ function anCombinedForPeriod(period){
 function anTotalsForPeriod(period){
   if(period==='current'){
     const combined=anCombinedForPeriod('current');
+    const asig=huchaAsignacionesForPeriod('current');
     return {
       gasto:combined.filter(c=>!c.isIncome).reduce((s,c)=>s+c.spent,0),
       ingreso:combined.filter(c=>c.isIncome).reduce((s,c)=>s+c.earned,0),
-      ahorroTotal:Object.values(state.mmAhorros||{}).reduce((s,a)=>s+parseFloat(a.amount||0),0),
-      ahorroItems:Object.values(state.mmAhorros||{}).map(a=>({name:a.name,amount:a.amount}))
+      ahorroTotal:asig.reduce((s,a)=>s+parseFloat(a.amount||0),0),
+      ahorroItems:asig.map(a=>({name:a.subName,amount:a.amount}))
     };
   }
   const m=state.historial?.[period];
@@ -2861,8 +2889,29 @@ function renderAhorro(){
         <button class="sc-btn mov" onclick="openEditSubcuenta('${sc.id}')">✏️ Editar</button>
         <button class="sc-btn del" onclick="delSubcuenta('${sc.id}')">🗑</button>
       </div>
+      <div class="sc-btns" style="margin-top:6px">
+        <button class="sc-btn asig" onclick="openSubAsig('${sc.id}')" style="flex:1">📌 Asignar ahorro</button>
+      </div>
+      ${buildSubAsigList(sc)}
     </div>`;
   }).join('');
+}
+
+function buildSubAsigList(sc){
+  const items=Object.values(sc.asignaciones||{}).sort((a,b)=>b.ts-a.ts);
+  if(!items.length) return '';
+  const totalMes=txThisMonth(sc.asignaciones).reduce((s,a)=>s+parseFloat(a.amount||0),0);
+  const rows=items.map(a=>`
+    <div class="sc-asig-row">
+      <div class="sc-asig-desc">${a.desc?esc(a.desc):'Asignación'}</div>
+      <div class="sc-asig-amt">€${fmt(a.amount)}</div>
+      <button class="mm-qbtn i" onclick="openSubAsig('${sc.id}','${a.id}')" title="Editar">✏️</button>
+      <button class="mm-qbtn g" onclick="delSubAsig('${sc.id}','${a.id}')" title="Eliminar">🗑</button>
+    </div>`).join('');
+  return `<div class="sc-asig-list">
+    <div class="sc-asig-hdr">📌 Asignado este mes: <strong>€${fmt(totalMes)}</strong></div>
+    ${rows}
+  </div>`;
 }
 
 window.openEditSubcuenta=function(id){
@@ -2887,7 +2936,7 @@ window.saveSubcuenta=function(){
   if(!name){ window.toast('El nombre es obligatorio'); return; }
   const id=editingSubId||uid();
   if(!state.subcuentas) state.subcuentas={};
-  if(!state.subcuentas[id]) state.subcuentas[id]={id,balance:0,movimientos:{}};
+  if(!state.subcuentas[id]) state.subcuentas[id]={id,balance:0,movimientos:{},asignaciones:{}};
   state.subcuentas[id].emoji=emoji; state.subcuentas[id].name=name; state.subcuentas[id].goal=goal;
   saveState(); closeModal('m-subcuenta'); window.toast(`${emoji} ${name} ${editingSubId?'actualizada':'creada'} ✓`);
 };
@@ -3053,14 +3102,13 @@ function closeMonth(){
   const widgetIncomeSnap=widgetIncomeReal(txThisMonth(state.ingresos));
   const totalGastoCombined=combined.filter(c=>!c.isIncome).reduce((s,c)=>s+c.spent,0);
   const totalIngresoCombined=combined.filter(c=>c.isIncome).reduce((s,c)=>s+c.earned,0)+widgetIncomeSnap;
-  const ahorroItems=Object.values(state.mmAhorros||{}).map(a=>({name:a.name,amount:a.amount}));
+  const ahorroItems=huchaAsignacionesForPeriod('current').map(a=>({name:a.subName,amount:a.amount}));
   const ahorroTotal=ahorroItems.reduce((s,a)=>s+parseFloat(a.amount||0),0);
   if(!state.historial) state.historial={};
   state.historial[key]={label:label.charAt(0).toUpperCase()+label.slice(1),totalGasto:tG+jG,totalIngreso:tI+jI+ingTotal,totalAportado:aportTotal,categories:snap,jointCategories:jsnap,categoriesCombined,totalGastoCombined,totalIngresoCombined,widgetIncomeReal:widgetIncomeSnap,ahorroTotal,ahorroItems,archivedAt:Date.now()};
   Object.keys(cats).forEach(id=>{ state.categories[id].transactions={}; });
   Object.keys(jcats).forEach(id=>{ state.jointCategories[id].transactions={}; });
   state.ingresos={};
-  state.mmAhorros={};
   state.transfers={};
   state.lastCloseTs=Date.now();
   state.mmPrevision={};
