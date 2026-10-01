@@ -664,13 +664,9 @@
     </div>
 
     <div class="chart-card" id="an-ahorro-card">
-      <h3>🐷 Ahorro (huchas)</h3>
-      <div class="an-grid3">
-        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label">Ahorro este mes</div><div class="sc-val" id="an-ahorro-amt" style="color:#8A6A2A">€0,00</div></div>
-        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label" id="an-avg-ahorro-label">Promedio/mes</div><div class="sc-val" id="an-avg-ahorro" style="color:#8A6A2A">€0,00</div></div>
-        <div class="sum-card" style="background:var(--gold-l);text-align:left"><div class="sc-label" id="an-total-ahorro-label">Total año</div><div class="sc-val" id="an-total-ahorro" style="color:#8A6A2A">€0,00</div></div>
-      </div>
-      <div id="an-ahorro-list"></div>
+      <h3>🐷 Ahorro por hucha</h3>
+      <div class="an-table-title"><span class="an-table-name">Hucha</span><span class="an-table-prom">Este mes</span><span class="an-table-prom">Prom. Mes</span><span class="an-table-total">Total Año</span></div>
+      <div id="an-ahorro-table"></div>
     </div>
 
     <div class="chart-card" id="pie-card">
@@ -2261,6 +2257,33 @@ function anYearlyAggregate(period){
   return {year,months:monthsCount,avgGasto:totalGastoYear/n,avgIngreso:totalIngresoYear/n,avgAhorro:totalAhorroYear/n,totalAhorro:totalAhorroYear,catAgg};
 }
 
+// Agrega, para el año del periodo seleccionado, el ahorro por hucha (Prom. Mes / Total Año), igual que catAgg
+function anAhorroAggregate(period){
+  const year=anPeriodYear(period);
+  const nowYear=new Date().getFullYear();
+  const agg={}; // nombre de hucha -> {total,months}
+  let monthsCount=0;
+  const addMonth=(items)=>{
+    monthsCount++;
+    const bySub={};
+    items.forEach(a=>{
+      const name=a.subName||a.name; if(!name) return;
+      bySub[name]=(bySub[name]||0)+parseFloat(a.amount||0);
+    });
+    Object.entries(bySub).forEach(([name,amt])=>{
+      if(!agg[name]) agg[name]={total:0,months:0};
+      agg[name].total+=amt;
+      if(amt>0) agg[name].months++;
+    });
+  };
+  Object.keys(state.historial||{}).forEach(k=>{
+    if(anPeriodYear(k)!==year) return;
+    addMonth(huchaAsignacionesForPeriod(k));
+  });
+  if(year===nowYear) addMonth(huchaAsignacionesForPeriod('current'));
+  return {year,months:monthsCount,agg};
+}
+
 // Serie mensual (todo el historial + mes actual) por categoría, para el gráfico de evolución
 function anMonthlySeries(){
   const keys=anPeriodKeys().slice().sort(); // ascendente: más antiguo primero
@@ -2343,11 +2366,6 @@ function renderAnalytics(){
   document.getElementById('an-avg-ingreso-label').textContent=`Promedio total ingresos mensuales (${agg.year})`;
   document.getElementById('an-avg-gasto').textContent='€'+fmt(agg.avgGasto);
   document.getElementById('an-avg-ingreso').textContent='€'+fmt(agg.avgIngreso);
-  document.getElementById('an-avg-ahorro-label').textContent=`Promedio ahorro mensual (${agg.year})`;
-  document.getElementById('an-total-ahorro-label').textContent=`Total ahorro (${agg.year})`;
-  document.getElementById('an-avg-ahorro').textContent='€'+fmt(agg.avgAhorro);
-  document.getElementById('an-total-ahorro').textContent='€'+fmt(agg.totalAhorro);
-
   const catList=Object.entries(agg.catAgg).map(([name,c])=>({name,...c}));
   // Se muestran todas las categorías con actividad ESE AÑO (no solo el mes seleccionado), para poder
   // ver su promedio aunque este mes en concreto no tengan movimiento. El promedio usa los meses en los
@@ -2392,11 +2410,18 @@ function renderAnalytics(){
     ? ingresoRows.map(c=>rowHtml(c,c.ingreso,c.mIngreso,periodByName[c.name]?.earned||0)).join('')
     : '<div style="color:var(--text-s);font-size:13px;text-align:center;padding:8px 0">Marca categorías como "de ingresos", o añade tu nómina desde el widget Ingresos de Cuentas</div>';
 
-  document.getElementById('an-ahorro-amt').textContent=fmtE(totals.ahorroTotal);
-  const ahorroListEl=document.getElementById('an-ahorro-list');
-  ahorroListEl.innerHTML=totals.ahorroItems.length
-    ? totals.ahorroItems.map(a=>`<div class="an-table-row"><div class="an-table-name">${esc(a.name)}</div><div class="an-table-total">€${fmt(a.amount)}</div></div>`).join('')
-    : '<div style="color:var(--text-s);font-size:13px;text-align:center;padding:6px 0">Sin ahorros este periodo</div>';
+  const ahorroAgg=anAhorroAggregate(anPeriod);
+  const thisPeriodBySub={};
+  totals.ahorroItems.forEach(a=>{ thisPeriodBySub[a.name]=(thisPeriodBySub[a.name]||0)+parseFloat(a.amount||0); });
+  const subEmoji={};
+  Object.values(state.subcuentas||{}).forEach(sc=>{ subEmoji[sc.name]=sc.emoji||'🐷'; });
+  const ahorroNames=Object.keys(ahorroAgg.agg).sort((a,b)=>ahorroAgg.agg[b].total-ahorroAgg.agg[a].total);
+  document.getElementById('an-ahorro-table').innerHTML=ahorroNames.length
+    ? ahorroNames.map(name=>{
+        const a=ahorroAgg.agg[name];
+        return rowHtml({emoji:subEmoji[name]||'🐷',name},a.total,a.months,thisPeriodBySub[name]||0);
+      }).join('')
+    : '<div style="color:var(--text-s);font-size:13px;text-align:center;padding:8px 0">Todavía no has asignado ahorro este año</div>';
 
   const data=combined.filter(c=>!c.isIncome).map((c,i)=>({name:c.name,emoji:c.emoji,net:c.spent,budget:c.budget,color:COLORS[i%COLORS.length]}));
   if(!data.length){
